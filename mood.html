@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Поділись настроєм</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="./mood.css">
+</head>
+<body>
+<section>
+  <div class="mood-box">
+
+    <h3>Поділись настроєм</h3>
+
+    <form id="moodForm" novalidate>
+      <table class="form-table" role="presentation">
+        <tbody>
+          <tr>
+            <td class="label-cell"><label for="moodSelect">Настрій</label></td>
+            <td class="input-cell">
+              <div class="select-wrap">
+                <select id="moodSelect" name="mood" required>
+                  <option value="" class="text-black">— Обери —</option>
+                  <option value="happy"  data-emoji="😊" class="text-black">😊 Щасливий</option>
+                  <option value="sad"    data-emoji="😕" class="text-black">😕 Засмучений</option>
+                  <option value="anxious" data-emoji="😧" class="text-black">😧 Схвильований</option>
+                  <option value="calm"   data-emoji="😴" class="text-black">😴 Розслаблений</option>
+                </select>
+              </div>
+              <span class="error-msg" id="err-mood">Будь ласка, обери настрій</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="label-cell"><label>Рейтинг</label></td>
+            <td class="input-cell">
+              <div class="star-rating" id="starRating" role="radiogroup" aria-label="Рейтинг від 1 до 5">
+                <input type="radio" id="s5" name="rating" value="5"><label for="s5" title="5 зірок">★</label>
+                <input type="radio" id="s4" name="rating" value="4"><label for="s4" title="4 зірки">★</label>
+                <input type="radio" id="s3" name="rating" value="3"><label for="s3" title="3 зірки">★</label>
+                <input type="radio" id="s2" name="rating" value="2"><label for="s2" title="2 зірки">★</label>
+                <input type="radio" id="s1" name="rating" value="1"><label for="s1" title="1 зірка">★</label>
+              </div>
+              <span class="error-msg" id="err-rating">Постав будь-яку оцінку</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="label-cell text-black"><label for="emailInput">Email</label></td>
+            <td class="input-cell">
+              <input type="email" id="emailInput" name="email" placeholder="you@example.com" autocomplete="email">
+              <span class="error-msg" id="err-email">Введи коректний email</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="label-cell"><label for="commentInput">Коментар</label></td>
+            <td class="input-cell">
+              <input type="text" id="commentInput" name="comment" placeholder="Напиши щось…" maxlength="200" required>
+              <span class="error-msg" id="err-comment">Коментар не може бути порожнім</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="btn-row">
+        <button id="send" type="submit">Надіслати ✦</button>
+        <button type="reset" class="btn-reset" title="Очистити форму"
+                aria-label="Очистити форму">🗑️</button>
+      </div>
+    </form>
+    <div class="success-overlay" id="successOverlay">
+      <span class="ok-icon">🎉</span>
+      <p>Дякуємо за відгук!</p>
+      <small>Ми цінуємо кожен настрій 💜</small>
+    </div>
+  </div>
+</section>
+<script>
+  const moodSelect = document.getElementById('moodSelect');
+  const form        = document.getElementById('moodForm');
+  const emailInput  = document.getElementById('emailInput');
+  const commentInput = document.getElementById('commentInput');
+  function showError(fieldId, errorId, show) {
+    const field = document.getElementById(fieldId);
+    const msg   = document.getElementById(errorId);
+    if (!field || !msg) return;
+    field.classList.toggle('is-invalid', show);
+    field.classList.toggle('is-valid',  !show && field.value.trim() !== '');
+    msg.classList.toggle('show', show);
+  }
+    emailInput.addEventListener('input', () => {
+    const val  = emailInput.value.trim();
+    const bad  = val !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    showError('emailInput', 'err-email', bad);
+  });
+
+  commentInput.addEventListener('input', () => {
+    showError('commentInput', 'err-comment', commentInput.value.trim() === '');
+  });
+  function ratingSelected() {
+    return !!form.querySelector('input[name="rating"]:checked');
+  }
+  document.querySelectorAll('input[name="rating"]').forEach(r => {
+    r.addEventListener('change', () => {
+      document.getElementById('err-rating').classList.remove('show');
+    });
+  });
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    let valid = true;
+    if (!moodSelect.value) {
+      showError('moodSelect', 'err-mood', true); valid = false;
+    } else {
+      showError('moodSelect', 'err-mood', false);
+    }
+    if (!ratingSelected()) {
+      document.getElementById('err-rating').classList.add('show'); valid = false;
+    }
+    const emailVal = emailInput.value.trim();
+    if (emailVal && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+      showError('emailInput', 'err-email', true); valid = false;
+    }
+    if (!commentInput.value.trim()) {
+      showError('commentInput', 'err-comment', true); valid = false;
+    } else {
+      showError('commentInput', 'err-comment', false);
+    }
+
+    if (!valid) return;
+    const btn = document.getElementById('send');
+    btn.textContent = '⏳ Надсилаємо…';
+    btn.classList.add('sending');
+
+    setTimeout(() => {
+      form.style.display = 'none';
+      document.getElementById('successOverlay').style.display = 'flex';
+    }, 1200);
+  });
+    form.addEventListener('reset', () => {
+    document.querySelectorAll('.error-msg').forEach(m => m.classList.remove('show'));
+    document.querySelectorAll('.is-invalid, .is-valid').forEach(f => {
+      f.classList.remove('is-invalid','is-valid');
+    });
+  });
+</script>
+<script>
+  document.getElementById('moodForm').addEventListener('submit', function(event) {
+    event.preventDefault(); 
+    window.location.href = '/site.html'; 
+  });
+</script>
+</body>
+</html>
